@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Expense Tracker</title>
+        <style>
+            body {
+                font-family: "Roboto", sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f9f9f9;
+                color: #333;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 20px;
+                color: #4caf50;
+            }
+
+            .container {
+                width: 90%;
+                max-width: 600px;
+                background: #fff;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+                padding: 20px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+            }
+
+            .form-group label {
+                margin-right: 10px;
+            }
+
+            .form-group input[type="text"],
+            .form-group input[type="number"] {
+                width: calc(100% - 20px);
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-size: 1rem;
+                margin-right: 20px;
+            }
+
+            .switch {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 10px;
+            }
+
+            .switch label {
+                display: flex;
+                align-items: center;
+                font-size: 0.9rem;
+            }
+
+            .switch input {
+                margin-right: 8px;
+            }
+
+            button {
+                background: #4caf50;
+                color: #fff;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 1rem;
+                transition: background 0.3s;
+            }
+
+            button:hover {
+                background: #45a049;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            table,
+            th,
+            td {
+                border: 1px solid #ddd;
+            }
+
+            th,
+            td {
+                padding: 10px;
+                text-align: center;
+                font-size: 0.9rem;
+            }
+
+            th {
+                background: #4caf50;
+                color: #fff;
+            }
+
+            tfoot td {
+                font-weight: bold;
+                background: #f1f1f1;
+            }
+
+            .icon {
+                font-size: 1.5em;
+                vertical-align: middle;
+            }
+
+            .male-icon {
+                color: #2196f3;
+            }
+
+            .female-icon {
+                color: #e91e63;
+            }
+
+            .delete-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 1.2rem;
+                color: #f44336;
+            }
+
+            .delete-btn:hover {
+                color: #d32f2f;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Expense Tracker</h1>
+        <div class="container">
+            <div class="form-group">
+                <label for="itemName">Item Name:</label>
+                <input
+                    type="text"
+                    id="itemName"
+                    placeholder="Enter item name"
+                />
+            </div>
+            <div class="form-group">
+                <label for="itemPrice">Price:</label>
+                <input type="number" id="itemPrice" placeholder="Enter price" />
+            </div>
+            <div class="form-group switch">
+                <label for="currency">Currency:</label>
+                <label
+                    ><input type="radio" name="currency" value="PLN" checked />
+                    PLN</label
+                >
+                <label
+                    ><input type="radio" name="currency" value="JPY" />
+                    JPY</label
+                >
+            </div>
+            <div class="form-group switch">
+                <label>Person:</label>
+                <label
+                    ><input type="radio" name="person" value="male" checked />
+                    <span class="icon male-icon">&#9794;</span>
+                </label>
+                <label
+                    ><input type="radio" name="person" value="female" />
+                    <span class="icon female-icon">&#9792;</span>
+                </label>
+            </div>
+            <button onclick="addItem()">Add Item</button>
+        </div>
+
+        <table id="expenseTable" class="container">
+            <thead>
+                <tr>
+                    <th>Item Name</th>
+                    <th>Price (JPY)</th>
+                    <th>Price (PLN)</th>
+                    <th>Person</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5">Summary:</td>
+                </tr>
+                <tr>
+                    <td>
+                        <span class="icon male-icon">&#9794;</span> (PLN):
+                        <span id="malePLN">0</span>
+                    </td>
+                    <td>
+                        <span class="icon male-icon">&#9794;</span> (JPY):
+                        <span id="maleJPY">0</span>
+                    </td>
+                    <td>
+                        <span class="icon female-icon">&#9792;</span> (PLN):
+                        <span id="femalePLN">0</span>
+                    </td>
+                    <td>
+                        <span class="icon female-icon">&#9792;</span> (JPY):
+                        <span id="femaleJPY">0</span>
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <script>
+            const tableBody = document.querySelector("#expenseTable tbody");
+            const malePLN = document.getElementById("malePLN");
+            const maleJPY = document.getElementById("maleJPY");
+            const femalePLN = document.getElementById("femalePLN");
+            const femaleJPY = document.getElementById("femaleJPY");
+
+            function getExpenses() {
+                return JSON.parse(localStorage.getItem("expenses")) || [];
+            }
+
+            function saveExpenses(expenses) {
+                localStorage.setItem("expenses", JSON.stringify(expenses));
+            }
+
+            function updateTable() {
+                const expenses = getExpenses();
+                tableBody.innerHTML = "";
+
+                let malePlnSum = 0,
+                    maleJpySum = 0,
+                    femalePlnSum = 0,
+                    femaleJpySum = 0;
+
+                expenses.forEach((expense, index) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                    <td>${expense.name}</td>
+                    <td>${expense.currency === "JPY" ? expense.price : ""}</td>
+                    <td>${expense.currency === "PLN" ? expense.price : ""}</td>
+                    <td>${
+                        expense.person === "male"
+                            ? '<span class="icon male-icon">&#9794;</span>'
+                            : '<span class="icon female-icon">&#9792;</span>'
+                    }</td>
+                    <td><button class="delete-btn" onclick="deleteItem(${index})">&#10006;</button></td>
+                `;
+
+                    if (expense.currency === "PLN") {
+                        if (expense.person === "male")
+                            malePlnSum += parseFloat(expense.price);
+                        else femalePlnSum += parseFloat(expense.price);
+                    } else {
+                        if (expense.person === "male")
+                            maleJpySum += parseFloat(expense.price);
+                        else femaleJpySum += parseFloat(expense.price);
+                    }
+
+                    tableBody.appendChild(row);
+                });
+
+                malePLN.textContent = malePlnSum;
+                maleJPY.textContent = maleJpySum;
+                femalePLN.textContent = femalePlnSum;
+                femaleJPY.textContent = femaleJpySum;
+            }
+
+            function addItem() {
+                const name = document.getElementById("itemName").value.trim();
+                const price = parseFloat(
+                    document.getElementById("itemPrice").value
+                );
+                const currency = document.querySelector(
+                    'input[name="currency"]:checked'
+                ).value;
+                const person = document.querySelector(
+                    'input[name="person"]:checked'
+                ).value;
+
+                if (!name || isNaN(price)) {
+                    alert("Please enter valid item name and price.");
+                    return;
+                }
+
+                const newExpense = { name, price, currency, person };
+                const expenses = getExpenses();
+                expenses.push(newExpense);
+                saveExpenses(expenses);
+                updateTable();
+
+                document.getElementById("itemName").value = "";
+                document.getElementById("itemPrice").value = "";
+            }
+
+            function deleteItem(index) {
+                const expenses = getExpenses();
+                expenses.splice(index, 1);
+                saveExpenses(expenses);
+                updateTable();
+            }
+
+            document.addEventListener("DOMContentLoaded", updateTable);
+        </script>
+    </body>
+</html>
